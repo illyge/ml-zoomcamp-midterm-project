@@ -1,0 +1,10 @@
+service: "service.py:svc"
+labels:
+  project: "twitter-disasters-service"
+include:
+  - "service.py"
+python:
+  packages:
+    - scikit-learn
+    - pydantic
+    - scipy

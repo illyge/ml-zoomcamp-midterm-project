@@ -39,4 +39,6 @@ def classify(twitter_object):
     vectors = svd.transform(best_vectors)
 
     prediction = model_runner.predict.run(vectors)
-    return prediction
+    return {
+        'disaster': prediction == 1
+    }

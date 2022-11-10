@@ -51,6 +51,5 @@ def train():
         custom_objects=train_data[1]
     ))
 
-
 if __name__ == '__main__':
     train()

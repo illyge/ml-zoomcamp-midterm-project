@@ -8,6 +8,13 @@ import scipy.sparse as sp
 from sklearn.decomposition import TruncatedSVD
 from sklearn.metrics import f1_score
 import logging
+import warnings
+
+from matplotlib.pyplot import cm
+import matplotlib.pyplot as plt 
+from matplotlib.pyplot import figure
+
+from sklearn.model_selection import GridSearchCV
 
 from sklearn.feature_selection import SelectKBest, chi2
 default_preprocess_settings = {
@@ -77,7 +84,7 @@ def prepare_train_data(df, y, settings = default_preprocess_settings):
         ht_vectors = ht_c_vectorizer.fit_transform(df.hashtags)
         vectors = sp.hstack((vectors, ht_vectors))
         
-    vectors =  p_features.fit_transform(vectors)
+    # vectors =  p_features.fit_transform(vectors)
 
     if best_k:
         s_k_best = SelectKBest(chi2, k=min(vectors.shape[1], best_k))
@@ -134,7 +141,7 @@ def prepare_test_vectors(df, train_data):
         ht_vectors = ht_c_vectorizer.transform(df.hashtags)
         vectors = sp.hstack((vectors, ht_vectors))
         
-    vectors =  p_features.transform(vectors)
+    # vectors =  p_features.transform(vectors)
 
     if s_k_best:
         vectors = s_k_best.transform(vectors)
@@ -189,3 +196,169 @@ def compare_models(models, vectors_combinations):
         df = pd.concat([df, pd.DataFrame([record_dict])])
     df.set_index('Features', inplace=True)
     return df
+
+
+
+
+def plot_score_diffs(diffs):
+    fig, ax = plt.subplots(6, 1, figsize=(10,35))
+
+    diffs_reversed = diffs.iloc[::-1]
+    steps_range = np.arange(diffs_reversed.shape[0])
+
+    for i, col in enumerate(diffs.columns):
+        diffs_sorted = diffs.sort_values(by=[col])
+        steps_range = np.arange(diffs_sorted.shape[0])
+
+        axes = plt.subplot(6, 1, i+1) 
+        plt.title(col)
+
+        scores = diffs_sorted[col].to_list()
+
+        positive_scores = [max(0, s) for s in scores]
+        negative_scores = [abs(min(0, s)) for s in scores]
+
+        features = list(diffs_sorted.index)
+
+        ticks = [f"{feature} ({round(score, 3)})" for feature, score in zip(features, scores)]
+
+        plt.barh(steps_range, width=positive_scores, height=0.7, label='Positive difference', color='green')
+        plt.barh(steps_range, width=negative_scores, height=0.7, label='Negative difference', color='red')
+
+        plt.yticks(steps_range, ticks)
+        plt.legend()
+        plt.ylabel('Preparation steps')
+        plt.xlabel('F1 Score difference vs Pure Text')
+
+    plt.legend()
+
+def k_range_scores(pipe, k_range, default_params={}, cv=None, X=None, y=None):
+    param_grid_default = default_params.copy() 
+    param_grid_default.update({
+        'poly2_k_best': [None]
+    })
+    
+    param_grid_k_range = default_params.copy()
+    param_grid_k_range.update({
+        'poly2_k_best__poly2': ['passthrough', PolynomialFeatures(2)],
+        'poly2_k_best__k_best__k': k_range
+    })
+    range_k_grid_search = GridSearchCV(pipe, 
+                                   param_grid = param_grid_k_range,
+                                   scoring='f1',
+                                   cv=cv)
+    default_grid_search = GridSearchCV(pipe, 
+                                   param_grid = param_grid_default,
+                                   scoring='f1',
+                                   cv=cv)
+    with warnings.catch_warnings():
+        warnings.simplefilter("ignore")
+        range_results = range_k_grid_search.fit(X, y)
+        default_results = default_grid_search.fit(X, y)
+        
+    return {
+        'range': range_results,
+        'default': default_results
+    }
+
+def svd_n_range_scores(pipe, n_range, no_poly_k=1000, poly_2_k=1000, defaults={}, cv=None, X=None, y=None):
+    variable_defaults = {
+        'Pure Text': {
+            'poly2_k_best': ['passthrough']
+         },
+        f'No Poly, Best {no_poly_k}': {
+            'poly2_k_best__poly2': ['passthrough'],
+            'poly2_k_best__k_best__k': [no_poly_k]
+        },
+        f'Poly 2, Best {poly_2_k}': {
+            'poly2_k_best__k_best__k': [poly_2_k]
+        },    
+        f'Poly 2, Best 10000': {
+            'poly2_k_best__k_best__k': [10000]
+        }         
+    }
+    
+    results = {}
+    for label, param_grid in variable_defaults.items():
+        param_grid_ranged = defaults.copy()
+        param_grid_ranged.update(param_grid)
+        param_grid_no_svd = param_grid_ranged.copy() 
+        param_grid_ranged.update({
+            'svd__n_components': n_range
+        })
+        param_grid_no_svd.update({
+            'svd': ['passthrough']
+        })
+            
+        grid_search = GridSearchCV(pipe, 
+                                   param_grid = param_grid_ranged,
+                                   scoring='f1',
+                                   cv=cv)
+        
+        grid_search_no_svd = GridSearchCV(pipe, 
+                                       param_grid = param_grid_no_svd,
+                                       scoring='f1',
+                                       cv=cv)
+        with warnings.catch_warnings():
+            warnings.simplefilter("ignore")
+            range_results = grid_search.fit(X, y)
+            no_svd_results = grid_search_no_svd.fit(X, y)
+        results[label] = {
+            'range': range_results,
+            'no_svd': no_svd_results
+        }
+        
+        
+    return results
+
+def plot_k_range_results(results):
+    range_results = results['range'].cv_results_
+    default_results = results['default'].cv_results_
+
+    non_poly_mask = [item['poly2_k_best__poly2'] == 'passthrough' for item in range_results['params']]
+    poly2_mask = [not i for i in non_poly_mask]
+    non_poly_scores = range_results['mean_test_score'][non_poly_mask]
+    poly2_scores = range_results['mean_test_score'][poly2_mask]
+    k_range = range_results['param_poly2_k_best__k_best__k'][poly2_mask]
+
+    default_score = default_results['mean_test_score'][0]
+    
+    plt.plot(k_range.data, poly2_scores, label='With poly2', color='blue')
+    max_poly2 = max(zip(k_range.data, poly2_scores), key=lambda x:x[1])
+    plt.axhline(y = max_poly2[1], color = 'blue', linestyle = ':', label=f"Max poly 2 {round(max_poly2[1], 3)} at {max_poly2[0]}")
+    
+    plt.plot(k_range.data, non_poly_scores, label='Without poly', color='orange')
+    max_non_poly = max(zip(k_range.data, non_poly_scores), key=lambda x:x[1])
+    plt.axhline(y = max_non_poly[1], color = 'orange', linestyle = ':', label=f"Max non poly {round(max_non_poly[1], 3)} at {max_non_poly[0]}")
+    
+    plt.axhline(y = default_score, color = 'gray', linestyle = ':', label=f"Default {round(default_score, 3)}")
+    
+    plt.xlabel('k in SelectKBest')
+    plt.ylabel('F1 score')
+    plt.legend()
+    
+def plot_svd__range_results(results):
+    figure(figsize=(10, 7), dpi=80)
+    color = iter(cm.rainbow(np.linspace(0, 1, len(results))))
+    
+    for label, labeled_results in results.items():
+        c = next(color)
+        
+        range_results = labeled_results['range'].cv_results_
+        no_svd_results = labeled_results['no_svd'].cv_results_
+
+        svd_n_range = range_results['param_svd__n_components'].data
+        scores = range_results['mean_test_score']
+        
+
+        no_svd_score = no_svd_results['mean_test_score'][0]
+    
+        plt.plot(svd_n_range, scores, label=label, color=c)
+        max_score = max(zip(svd_n_range, scores), key=lambda x:x[1])
+        
+        plt.axhline(y = max_score[1], color = c, linestyle = ':', label=f"Max score for {label} {round(max_score[1], 3)} at {max_score[0]}")
+        plt.axhline(y = no_svd_score, color = c, linestyle = '--', label=f"No SVD {round(no_svd_score, 3)}")
+    
+    plt.xlabel('n components in TruncatedSVD')
+    plt.ylabel('F1 score')
+    plt.legend()

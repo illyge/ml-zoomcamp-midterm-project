@@ -232,17 +232,20 @@ def plot_score_diffs(diffs):
 
     plt.legend()
 
-def k_range_scores(pipe, k_range, default_params={}, cv=None, X=None, y=None):
-    param_grid_default = default_params.copy() 
-    param_grid_default.update({
-        'poly2_k_best': [None]
-    })
+def k_range_scores_for_pipe(pipe, k_range, cv=None, X=None, y=None):
+    print (f"Doing another pipe")
     
-    param_grid_k_range = default_params.copy()
-    param_grid_k_range.update({
+    param_grid_default = {
+        'poly2_k_best': [None],
+        'svd': ['passthrough']
+    }
+    
+    param_grid_k_range = {
         'poly2_k_best__poly2': ['passthrough', PolynomialFeatures(2)],
-        'poly2_k_best__k_best__k': k_range
-    })
+        'poly2_k_best__k_best__k': k_range,
+        'svd': ['passthrough']
+    }
+    
     range_k_grid_search = GridSearchCV(pipe, 
                                    param_grid = param_grid_k_range,
                                    scoring='f1',
@@ -253,7 +256,9 @@ def k_range_scores(pipe, k_range, default_params={}, cv=None, X=None, y=None):
                                    cv=cv)
     with warnings.catch_warnings():
         warnings.simplefilter("ignore")
+        print('fitting range')
         range_results = range_k_grid_search.fit(X, y)
+        print('fitting default')
         default_results = default_grid_search.fit(X, y)
         
     return {
@@ -261,7 +266,13 @@ def k_range_scores(pipe, k_range, default_params={}, cv=None, X=None, y=None):
         'default': default_results
     }
 
-def svd_n_range_scores(pipe, n_range, no_poly_k=1000, poly_2_k=1000, defaults={}, cv=None, X=None, y=None):
+def k_range_scores(ranged_pipelines, cv=None, X=None, y=None):
+    print("whatever")
+    return {
+        k: k_range_scores_for_pipe(rp[0], rp[1], cv=cv, X=X, y=y) for k, rp in ranged_pipelines.items()
+    } 
+
+def svd_n_range_scores_for_pipe(pipe, n_range, no_poly_k=1000, poly_2_k=1000, defaults={}, cv=None, X=None, y=None):
     variable_defaults = {
         'Pure Text': {
             'poly2_k_best': ['passthrough']
@@ -290,6 +301,9 @@ def svd_n_range_scores(pipe, n_range, no_poly_k=1000, poly_2_k=1000, defaults={}
             'svd': ['passthrough']
         })
             
+        # print(pipe)
+        # print(param_grid_ranged)
+        # pring(cv)
         grid_search = GridSearchCV(pipe, 
                                    param_grid = param_grid_ranged,
                                    scoring='f1',
@@ -311,54 +325,83 @@ def svd_n_range_scores(pipe, n_range, no_poly_k=1000, poly_2_k=1000, defaults={}
         
     return results
 
-def plot_k_range_results(results):
-    range_results = results['range'].cv_results_
-    default_results = results['default'].cv_results_
+def svd_n_range_scores(params_dict):
+    return {
+        key: svd_n_range_scores_for_pipe(**params) for key, params in params_dict.items()
+    }
 
-    non_poly_mask = [item['poly2_k_best__poly2'] == 'passthrough' for item in range_results['params']]
-    poly2_mask = [not i for i in non_poly_mask]
-    non_poly_scores = range_results['mean_test_score'][non_poly_mask]
-    poly2_scores = range_results['mean_test_score'][poly2_mask]
-    k_range = range_results['param_poly2_k_best__k_best__k'][poly2_mask]
+import matplotlib.ticker as mticker
 
-    default_score = default_results['mean_test_score'][0]
-    
-    plt.plot(k_range.data, poly2_scores, label='With poly2', color='blue')
-    max_poly2 = max(zip(k_range.data, poly2_scores), key=lambda x:x[1])
-    plt.axhline(y = max_poly2[1], color = 'blue', linestyle = ':', label=f"Max poly 2 {round(max_poly2[1], 3)} at {max_poly2[0]}")
-    
-    plt.plot(k_range.data, non_poly_scores, label='Without poly', color='orange')
-    max_non_poly = max(zip(k_range.data, non_poly_scores), key=lambda x:x[1])
-    plt.axhline(y = max_non_poly[1], color = 'orange', linestyle = ':', label=f"Max non poly {round(max_non_poly[1], 3)} at {max_non_poly[0]}")
-    
-    plt.axhline(y = default_score, color = 'gray', linestyle = ':', label=f"Default {round(default_score, 3)}")
-    
-    plt.xlabel('k in SelectKBest')
-    plt.ylabel('F1 score')
-    plt.legend()
-    
-def plot_svd__range_results(results):
-    figure(figsize=(10, 7), dpi=80)
-    color = iter(cm.rainbow(np.linspace(0, 1, len(results))))
-    
-    for label, labeled_results in results.items():
-        c = next(color)
+def plot_k_range_results(all_results):
+    fig, ax = plt.subplots(len(all_results), 1, figsize=(10,35))
+
+    i=1
+    for k, results in all_results.items():
+        axes = plt.subplot(6, 1, i) 
+        i+=1
+        plt.title(k)
         
-        range_results = labeled_results['range'].cv_results_
-        no_svd_results = labeled_results['no_svd'].cv_results_
+        axes.set_xscale('log')
+        axes.xaxis.set_minor_formatter(mticker.ScalarFormatter())
 
-        svd_n_range = range_results['param_svd__n_components'].data
-        scores = range_results['mean_test_score']
-        
+        range_results = results['range'].cv_results_
+        default_results = results['default'].cv_results_
 
-        no_svd_score = no_svd_results['mean_test_score'][0]
+        non_poly_mask = [item['poly2_k_best__poly2'] == 'passthrough' for item in range_results['params']]
+        poly2_mask = [not i for i in non_poly_mask]
+        non_poly_scores = range_results['mean_test_score'][non_poly_mask]
+        poly2_scores = range_results['mean_test_score'][poly2_mask]
+        k_range = range_results['param_poly2_k_best__k_best__k'][poly2_mask]
+
+        default_score = default_results['mean_test_score'][0]
+
+        plt.plot(k_range.data, poly2_scores, label='With poly2', color='blue')
+        max_poly2 = max(zip(k_range.data, poly2_scores), key=lambda x:x[1])
+        plt.axhline(y = max_poly2[1], color = 'blue', linestyle = ':', label=f"Max poly 2 {round(max_poly2[1], 3)} at {max_poly2[0]}")
+
+        plt.plot(k_range.data, non_poly_scores, label='Without poly', color='orange')
+        max_non_poly = max(zip(k_range.data, non_poly_scores), key=lambda x:x[1])
+        plt.axhline(y = max_non_poly[1], color = 'orange', linestyle = ':', label=f"Max non poly {round(max_non_poly[1], 3)} at {max_non_poly[0]}")
+
+        plt.axhline(y = default_score, color = 'gray', linestyle = ':', label=f"Default {round(default_score, 3)}")
+
+        plt.xlabel('k in SelectKBest')
+        plt.ylabel('F1 score')
+
+        plt.legend()
+        print(k_range.data)
     
-        plt.plot(svd_n_range, scores, label=label, color=c)
-        max_score = max(zip(svd_n_range, scores), key=lambda x:x[1])
+def plot_svd__range_results(all_results):
+    fig, ax = plt.subplots(len(all_results), 1, figsize=(10,35))
+
+    i=1    
+    
+    for key, results in all_results.items():
+        axes = plt.subplot(6, 1, i) 
+        i+=1
+        plt.title(key)
         
-        plt.axhline(y = max_score[1], color = c, linestyle = ':', label=f"Max score for {label} {round(max_score[1], 3)} at {max_score[0]}")
-        plt.axhline(y = no_svd_score, color = c, linestyle = '--', label=f"No SVD {round(no_svd_score, 3)}")
-    
-    plt.xlabel('n components in TruncatedSVD')
-    plt.ylabel('F1 score')
-    plt.legend()
+        # figure(figsize=(10, 7), dpi=80)
+        color = iter(cm.rainbow(np.linspace(0, 1, len(results))))
+
+        for label, labeled_results in results.items():
+            c = next(color)
+
+            range_results = labeled_results['range'].cv_results_
+            no_svd_results = labeled_results['no_svd'].cv_results_
+
+            svd_n_range = range_results['param_svd__n_components'].data
+            scores = range_results['mean_test_score']
+
+
+            no_svd_score = no_svd_results['mean_test_score'][0]
+
+            plt.plot(svd_n_range, scores, label=label, color=c)
+            max_score = max(zip(svd_n_range, scores), key=lambda x:x[1])
+
+            plt.axhline(y = max_score[1], color = c, linestyle = ':', label=f"Max score for {label} {round(max_score[1], 3)} at {max_score[0]}")
+            plt.axhline(y = no_svd_score, color = c, linestyle = '--', label=f"No SVD {round(no_svd_score, 3)}")
+
+        plt.xlabel('n components in TruncatedSVD')
+        plt.ylabel('F1 score')
+        plt.legend()

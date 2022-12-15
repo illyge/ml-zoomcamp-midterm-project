@@ -273,8 +273,10 @@ def k_range_scores(ranged_pipelines, cv=None, X=None, y=None):
     } 
 
 def svd_n_range_scores_for_pipe(pipe, n_range, no_poly_k=1000, poly_2_k=1000, defaults={}, cv=None, X=None, y=None):
+    print (f"Doing another pipe")
+
     variable_defaults = {
-        'Pure Text': {
+        'No Poly, No BestK': {
             'poly2_k_best': ['passthrough']
          },
         f'No Poly, Best {no_poly_k}': {
@@ -282,9 +284,11 @@ def svd_n_range_scores_for_pipe(pipe, n_range, no_poly_k=1000, poly_2_k=1000, de
             'poly2_k_best__k_best__k': [no_poly_k]
         },
         f'Poly 2, Best {poly_2_k}': {
+            'poly2_k_best__poly2': [PolynomialFeatures(2)],
             'poly2_k_best__k_best__k': [poly_2_k]
         },    
         f'Poly 2, Best 10000': {
+            'poly2_k_best__poly2': [PolynomialFeatures(2)],
             'poly2_k_best__k_best__k': [10000]
         }         
     }

@@ -373,8 +373,7 @@ def plot_k_range_results(all_results):
         plt.ylabel('F1 score')
 
         plt.legend()
-        print(k_range.data)
-    
+        
 def plot_svd__range_results(all_results):
     fig, ax = plt.subplots(len(all_results), 1, figsize=(10,35))
 

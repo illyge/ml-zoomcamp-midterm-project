@@ -30,6 +30,8 @@ default_preprocess_settings = {
     'svd_n_comp': None
 }
 
+import matplotlib.ticker as mticker
+
 def prepare_train_data(df, y, settings = default_preprocess_settings):
     
     url_cleaner, preprocessor, stopwords, ngram_range, best_k, max_poly, kw, loc, hashtags, svd_n_comp = itemgetter(
@@ -334,7 +336,6 @@ def svd_n_range_scores(params_dict):
         key: svd_n_range_scores_for_pipe(**params) for key, params in params_dict.items()
     }
 
-import matplotlib.ticker as mticker
 
 def plot_k_range_results(all_results):
     fig, ax = plt.subplots(len(all_results), 1, figsize=(10,35))

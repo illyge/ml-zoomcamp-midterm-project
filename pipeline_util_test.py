@@ -1,17 +1,4 @@
-from unittest import TestCase
 from unittest.mock import patch
-from pipeline_util import *
-
-
-
-    # def test_make_vectorizer_with_urls(self):
-    #     # Call make_vectorizer with urls=True
-    #     vectorizer = make_vectorizer(urls=True)
-    #
-    #     # Assert that the returned ColumnTransformer has the correct column
-    #     self.assertEqual(vectorizer.transformers[1][0], 'urls_c_vect')
-    #     self.
-
 import pandas as pd
 from pipeline_util import *
 

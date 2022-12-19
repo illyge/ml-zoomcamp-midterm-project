@@ -124,21 +124,3 @@ class TestFunctions(unittest.TestCase):
         self.assertEqual(pipeline.steps[1][0], 'vectorizer')
         self.assertIsInstance(pipeline.steps[1][1], ColumnTransformer)
 
-    # def test_make_transformation_pipeline(self):
-    #     # Test that the returned object is a Pipeline
-    #     pipeline = make_transformation_pipeline(classifier=None, params={})
-    #     self.assertIsInstance(pipeline, Pipeline)
-    #
-    #     # Test that the Pipeline has the correct steps
-    #     self.assertEqual(pipeline.steps[0][0], 'url_cleaner')
-    #     self.assertEqual(pipeline.steps[1][0], 'vectorizer')
-    #     self.assertEqual(pipeline.steps[1][1], make_vectorizer())
-    #     self.assertEqual(pipeline.steps[2][0], 'poly2_k_best')
-    #     self.assertEqual(pipeline.steps[2][1], make_poly2_k_best_pipeline())
-    #     self.assertEqual(pipeline.steps[0][0], 'poly2')
-    #     self.assertEqual(pipeline.steps[1][0], 'k_best')
-    #
-    #     self.assertEqual(pipeline.steps[3][0], 'svd')
-    #     self.assertEqual(pipeline.steps[3][1], TruncatedSVD)
-    #     self.assertEqual(pipeline.steps[4][0], 'classifier')
-

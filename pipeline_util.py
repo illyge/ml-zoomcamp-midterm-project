@@ -16,8 +16,8 @@ def loc_to_dict(series):
 def make_kw_pipeline():
     return Pipeline(steps=[('kw_to_dict', FunctionTransformer(kw_to_dict)),
                               ('d_vect', DictVectorizer())])
-def make_loc_pipeline(): 
-    return Pipeline(steps=[('kw_to_dict', FunctionTransformer(loc_to_dict)),
+def make_loc_pipeline():
+    return Pipeline(steps=[('loc_to_dict', FunctionTransformer(loc_to_dict)),
                               ('d_vect', DictVectorizer())])
 
 def make_poly2_k_best_pipeline():
@@ -25,9 +25,9 @@ def make_poly2_k_best_pipeline():
                                         ('k_best', SelectKBest(chi2))])
 
 def make_vectorizer(
-        min_df=10, 
-        kw=False, 
-        loc=False, 
+        min_df=10,
+        kw=False,
+        loc=False,
         hashtags=False,
         urls=False,
         stopwords=None,
@@ -41,42 +41,43 @@ def make_vectorizer(
     if hashtags:
         columns.append(('hashtags_c_vect', CountVectorizer(min_df=5, analyzer=lambda x: x), 'hashtags'))
     if urls:
-        columns.append(('urls_c_vect', CountVectorizer(min_df=3, analyzer=lambda x: x), 'urls'))        
-    
+        columns.append(('urls_c_vect', CountVectorizer(min_df=3, analyzer=lambda x: x), 'urls'))
+
     return ColumnTransformer(columns)
-    
+
 
 def make_preparation_pipeline(
         url_cleaner=None,
-        min_df=10, 
-        kw=False, 
-        loc=False, 
+        min_df=10,
+        kw=False,
+        loc=False,
         hashtags=False,
         urls=False,
         stopwords=None,
         preprocessor=None,
         ngram_range=(1, 1),
     ):
-    
+
     vectorizer=make_vectorizer(
         min_df=min_df,
-        kw=kw, 
-        loc=loc, 
+        kw=kw,
+        loc=loc,
+        urls=urls,
         hashtags=hashtags,
         stopwords=stopwords,
         preprocessor=preprocessor,
         ngram_range=ngram_range)
-    
-    steps = [('url_cleaner', url_cleaner)]    
+
+    steps = [('url_cleaner', url_cleaner)]
     steps.append(('vectorizer', vectorizer))
-    
+
     return Pipeline(steps=steps)
 
 def make_transformation_pipeline(
     classifier,
     params
 ):
-    pipeline = make_preparation_pipeline(**params) 
+    pipeline = make_preparation_pipeline(**params)
     steps = pipeline.steps.copy()
     steps.append(('poly2_k_best', make_poly2_k_best_pipeline()))
     steps.append(('svd', TruncatedSVD(algorithm='arpack')))

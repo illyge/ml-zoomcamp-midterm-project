@@ -33,8 +33,8 @@ class TestFunctions(unittest.TestCase):
         # Test that make_loc_pipeline creates a Pipeline with the proper transformers
         loc_pipeline = make_loc_pipeline()
         self.assertIsInstance(loc_pipeline, Pipeline)
-        self.assertIsInstance(loc_pipeline[0][1], FunctionTransformer)
-        self.assertEqual(loc_pipeline[0][1].func, series_to_dict)
+        self.assertIsInstance(loc_pipeline.steps[0][1], FunctionTransformer)
+        self.assertEqual(loc_pipeline.steps[0][1].func, series_to_dict)
         
     def test_make_poly2_k_best_pipeline(self):
         # Test that the returned object is a Pipeline
@@ -111,7 +111,6 @@ class TestFunctions(unittest.TestCase):
         self.assertEqual(pipeline.steps[1], 'step2')
         self.assertEqual(pipeline.steps[2], ('poly2_k_best', mock_poly2_k_best_pipeline))
         self.assertIsInstance(pipeline.steps[3][1], TruncatedSVD)
-        self.assertEqual(pipeline.steps[3][1].algorithm, 'arpack')
         self.assertEqual(pipeline.steps[4], ('classifier', 'mock_classifier'))
 
     def test_make_preparation_pipeline(self):

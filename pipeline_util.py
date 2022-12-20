@@ -178,7 +178,7 @@ def make_transformation_pipeline(
     pipeline = make_preparation_pipeline(**params)
     steps = pipeline.steps.copy()
     steps.append(('poly2_k_best', make_poly2_k_best_pipeline()))
-    steps.append(('svd', TruncatedSVD(algorithm='arpack')))
+    steps.append(('svd', TruncatedSVD(random_state=42)))
     steps.append(('classifier', classifier))
 
     return Pipeline(steps)

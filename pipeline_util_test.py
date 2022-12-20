@@ -6,17 +6,19 @@ from pipeline_util import *
 import unittest.mock
 
 class TestFunctions(unittest.TestCase):
-    def test_kw_to_dict(self):
-        # Test with a sample series
-        series = pd.Series(['keyword1', 'keyword2', 'keyword3'], name='keyword')
-        expected_output = [{'keyword': 'keyword1'}, {'keyword': 'keyword2'}, {'keyword': 'keyword3'}]
-        self.assertEqual(kw_to_dict(series), expected_output)
-
-    def test_loc_to_dict(self):
-        # Test with a sample series
-        series = pd.Series(['location1', 'location2', 'location3'], name='location')
-        expected_output = [{'location': 'location1'}, {'location': 'location2'}, {'location': 'location3'}]
-        self.assertEqual(loc_to_dict(series), expected_output)
+    
+    def test_series_to_dict_single_word_elements(self):
+        # Test Series with single word elements
+        s = pd.Series(['apple', 'banana', 'cherry'], name='column_name')
+        result = series_to_dict(s)
+        self.assertEqual(result, [{'column_name': 'apple'}, {'column_name': 'banana'}, {'column_name': 'cherry'}])
+        
+    def test_make_kw_pipeline(self):
+        # Test that make_kw_pipeline creates a Pipeline with the proper transformers
+        kw_pipeline = make_kw_pipeline()
+        self.assertIsInstance(kw_pipeline, Pipeline)
+        self.assertIsInstance(kw_pipeline[0][1], FunctionTransformer)
+        self.assertEqual(kw_pipeline[0][1].func, series_to_dict)
 
     def test_make_kw_pipeline(self):
         # Test that the returned object is a Pipeline
@@ -28,14 +30,12 @@ class TestFunctions(unittest.TestCase):
         self.assertEqual(pipeline.steps[1][0], 'd_vect')
 
     def test_make_loc_pipeline(self):
-        # Test that the returned object is a Pipeline
-        pipeline = make_loc_pipeline()
-        self.assertIsInstance(pipeline, Pipeline)
-
-        # Test that the Pipeline has the correct steps
-        self.assertEqual(pipeline.steps[0][0], 'loc_to_dict')
-        self.assertEqual(pipeline.steps[1][0], 'd_vect')
-
+        # Test that make_loc_pipeline creates a Pipeline with the proper transformers
+        loc_pipeline = make_loc_pipeline()
+        self.assertIsInstance(loc_pipeline, Pipeline)
+        self.assertIsInstance(loc_pipeline[0][1], FunctionTransformer)
+        self.assertEqual(loc_pipeline[0][1].func, series_to_dict)
+        
     def test_make_poly2_k_best_pipeline(self):
         # Test that the returned object is a Pipeline
         pipeline = make_poly2_k_best_pipeline()
@@ -123,4 +123,3 @@ class TestFunctions(unittest.TestCase):
         self.assertEqual(pipeline.steps[0][0], 'url_cleaner')
         self.assertEqual(pipeline.steps[1][0], 'vectorizer')
         self.assertIsInstance(pipeline.steps[1][1], ColumnTransformer)
-

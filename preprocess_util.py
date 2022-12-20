@@ -10,10 +10,6 @@ from sklearn.metrics import f1_score
 import logging
 import warnings
 
-from matplotlib.pyplot import cm
-import matplotlib.pyplot as plt 
-from matplotlib.pyplot import figure
-
 from sklearn.model_selection import GridSearchCV
 
 from datetime import datetime
@@ -32,43 +28,24 @@ default_preprocess_settings = {
     'svd_n_comp': None
 }
 
-import matplotlib.ticker as mticker
-
-def plot_score_diffs(diffs):
-    fig, ax = plt.subplots(6, 1, figsize=(10,35))
-
-    diffs_reversed = diffs.iloc[::-1]
-    steps_range = np.arange(diffs_reversed.shape[0])
-
-    for i, col in enumerate(diffs.columns):
-        diffs_sorted = diffs.sort_values(by=[col])
-        steps_range = np.arange(diffs_sorted.shape[0])
-
-        axes = plt.subplot(6, 1, i+1) 
-        plt.title(col)
-
-        scores = diffs_sorted[col].to_list()
-
-        positive_scores = [max(0, s) for s in scores]
-        negative_scores = [abs(min(0, s)) for s in scores]
-
-        features = list(diffs_sorted.index)
-
-        ticks = [f"{feature} ({round(score, 3)})" for feature, score in zip(features, scores)]
-
-        plt.barh(steps_range, width=positive_scores, height=0.7, label='Positive difference', color='green')
-        plt.barh(steps_range, width=negative_scores, height=0.7, label='Negative difference', color='red')
-
-        plt.yticks(steps_range, ticks)
-        plt.legend()
-        plt.ylabel('Preparation steps')
-        plt.xlabel('F1 Score difference vs Pure Text')
-
-    plt.legend()
-
 def k_range_scores_for_pipe(pipe, k_range, cv=None, X=None, y=None):
+    """
+    Calculate scores for a given pipeline with k values from a range.
+    
+    Parameters:
+    - pipe (sklearn Pipeline): The pipeline to score.
+    - k_range (list): A list of integers representing the range of k values to test.
+    - cv (int or sklearn model): The number of folds for cross-validation or a cross-validation splitter.
+    - X (numpy array or pandas DataFrame): The input data.
+    - y (numpy array or pandas Series): The target data.
+    
+    Returns:
+    - dict: A dictionary with two keys: 'range' and 'default'. The 'range' key refers to a GridSearchCV object
+            with k values from the provided range. The 'default' key refers to a GridSearchCV object without 
+            either polynomialization or k best selection
+    """
     param_grid_default = {
-        'poly2_k_best': [None],
+        'poly2_k_best': ['passthrough'],
         'svd': ['passthrough']
     }
     
@@ -97,16 +74,48 @@ def k_range_scores_for_pipe(pipe, k_range, cv=None, X=None, y=None):
     }
 
 def k_range_scores(ranged_pipelines, cv=None, X=None, y=None):
-    result = {}
-    for k, rp in ranged_pipelines.items():
-        current_time = datetime.now().strftime("%H:%M:%S")
-        print(f"Started {k} at {current_time}")
-        result[k] = k_range_scores_for_pipe(rp[0], rp[1], cv=cv, X=X, y=y)
-    return result
+    """
+    Calculate scores for a given set of pipelines with k values from a range.
     
+    Parameters:
+    - ranged_pipelines (dict): A dictionary where the keys are strings representing the name of the pipeline and the
+                               values are tuples with the first element being a sklearn Pipeline object and the second
+                               element being a list of integers representing the range of k values to test.
+    - cv (int or sklearn model): The number of folds for cross-validation or a cross-validation splitter.
+    - X (numpy array or pandas DataFrame): The input data.
+    - y (numpy array or pandas Series): The target data.
+    
+    Returns:
+    - dict: A dictionary where the keys are the names of the pipelines and the values are dictionaries with two keys: 
+            'range' and 'default'. The 'range' key refers to a GridSearchCV object with k values from the provided 
+            range. The 'default' key refers to a GridSearchCV object  without either polynomialization or k best selection
+    """    
+    return {
+        key: k_range_scores_for_pipe(rp[0], rp[1], cv=cv, X=X, y=y) for key, rp in ranged_pipelines.items()
+    }
 
 def svd_n_range_scores_for_pipe(pipe, n_range, no_poly_k=1000, poly_2_k=1000, defaults={}, cv=None, X=None, y=None):
-
+    """
+    Calculate scores for a given pipeline with a range of n values for the SVD step.
+    
+    Parameters:
+    - pipe (sklearn Pipeline): The pipeline to score.
+    - n_range (list): A list of integers representing the range of n values to test for the SVD step.
+    - no_poly_k (int): The k value to use for the BestK step when the PolynomialFeatures step is set to 'passthrough'.
+                      Default is 1000.
+    - poly_2_k (int): The k value to use for the BestK step when the PolynomialFeatures step is set to PolynomialFeatures(2).
+                      Default is 1000.
+    - defaults (dict): A dictionary with parameter grids for the pipeline. Default is an empty dictionary.
+    - cv (int or sklearn model): The number of folds for cross-validation or a cross-validation splitter.
+    - X (numpy array or pandas DataFrame): The input data.
+    - y (numpy array or pandas Series): The target data.
+    
+    Returns:
+    - dict: A dictionary with keys representing the different parameter grid combinations being tested and values being
+            dictionaries with two keys: 'range' and 'no_svd'. The 'range' key refers to a GridSearchCV object with 
+            n values from the provided range for the SVD step. The 'no_svd' key refers to a GridSearchCV object with 
+            the SVD step set to 'passthrough'.
+    """
     variable_defaults = {
         'No Poly, No BestK': {
             'poly2_k_best': ['passthrough']
@@ -159,103 +168,22 @@ def svd_n_range_scores_for_pipe(pipe, n_range, no_poly_k=1000, poly_2_k=1000, de
     return results
 
 def svd_n_range_scores(params_dict):
+    """
+    Calculate scores for a given set of pipelines with a range of n values for the SVD step.
+    
+    Parameters:
+    - params_dict (dict): A dictionary where the keys are strings representing the name of the pipeline and the values 
+                         are dictionaries with the parameters for the svd_n_range_scores_for_pipe function.
+    
+    Returns:
+    - dict: A dictionary where the keys are the names of the pipelines and the values are dictionaries with keys 
+            representing the different parameter grid combinations being tested and values being dictionaries with two 
+            keys: 'range' and 'no_svd'. The 'range' key refers to a GridSearchCV object with n values from the 
+            provided range for the SVD step. The 'no_svd' key refers to a GridSearchCV object with the SVD step set 
+            to 'passthrough'.
+    """    
     result = {}
     for key, params in params_dict.items():
-        current_time = datetime.now().strftime("%H:%M:%S")
-        print(f"Started {key} at {current_time}")
-        result[key] = svd_n_range_scores_for_pipe(**params)
-    return result
-
-def plot_k_range_results(all_results):
-    fig, ax = plt.subplots(len(all_results), 1, figsize=(10,35))
-
-    i=1
-    for k, results in all_results.items():
-        axes = plt.subplot(6, 1, i) 
-        i+=1
-        plt.title(k)
-        
-        axes.set_xscale('log')
-        axes.xaxis.set_minor_formatter(mticker.ScalarFormatter())
-
-        range_results = results['range'].cv_results_
-        default_results = results['default'].cv_results_
-
-        non_poly_mask = [item['poly2_k_best__poly2'] == 'passthrough' for item in range_results['params']]
-        poly2_mask = [not i for i in non_poly_mask]
-        non_poly_scores = range_results['mean_test_score'][non_poly_mask]
-        poly2_scores = range_results['mean_test_score'][poly2_mask]
-        k_range = range_results['param_poly2_k_best__k_best__k'][poly2_mask]
-
-        default_score = default_results['mean_test_score'][0]
-
-        plt.plot(k_range.data, poly2_scores, label='With poly2', color='blue')
-        max_poly2 = max(zip(k_range.data, poly2_scores), key=lambda x:x[1])
-        plt.axhline(y = max_poly2[1], color = 'blue', linestyle = ':', label=f"Max poly 2 {round(max_poly2[1], 3)} at {max_poly2[0]}")
-
-        plt.plot(k_range.data, non_poly_scores, label='Without poly', color='orange')
-        max_non_poly = max(zip(k_range.data, non_poly_scores), key=lambda x:x[1])
-        plt.axhline(y = max_non_poly[1], color = 'orange', linestyle = ':', label=f"Max non poly {round(max_non_poly[1], 3)} at {max_non_poly[0]}")
-
-        plt.axhline(y = default_score, color = 'gray', linestyle = ':', label=f"Default {round(default_score, 3)}")
-
-        plt.xlabel('k in SelectKBest')
-        plt.ylabel('F1 score')
-
-        plt.legend()
-        
-def plot_svd__range_results(all_results):
-    fig, ax = plt.subplots(len(all_results), 1, figsize=(10,35))
-
-    i=1    
-    
-    for key, results in all_results.items():
-        axes = plt.subplot(6, 1, i) 
-        i+=1
-        plt.title(key)
-        
-        # figure(figsize=(10, 7), dpi=80)
-        color = iter(cm.rainbow(np.linspace(0, 1, len(results))))
-
-        for label, labeled_results in results.items():
-            c = next(color)
-
-            range_results = labeled_results['range'].cv_results_
-            no_svd_results = labeled_results['no_svd'].cv_results_
-
-            svd_n_range = range_results['param_svd__n_components'].data
-            scores = range_results['mean_test_score']
-
-
-            no_svd_score = no_svd_results['mean_test_score'][0]
-
-            plt.plot(svd_n_range, scores, label=label, color=c)
-            max_score = max(zip(svd_n_range, scores), key=lambda x:x[1])
-
-            plt.axhline(y = max_score[1], color = c, linestyle = ':', label=f"Max score for {label} {round(max_score[1], 3)} at {max_score[0]}")
-            plt.axhline(y = no_svd_score, color = c, linestyle = '--', label=f"No SVD {round(no_svd_score, 3)}")
-
-        plt.xlabel('n components in TruncatedSVD')
-        plt.ylabel('F1 score')
-        plt.legend()
-        
-def plot_grid_results(results, x_var, legend_var=None, log=False):
-    if legend_var is None:
-        legend_values=['dummy']
-    else:
-        legend_values=results.param_grid[legend_var]
-    for l_val in legend_values:
-        scores = results.cv_results_['mean_test_score']
-        x_values =  results.cv_results_[f'param_{x_var}'].data
-        if legend_var:
-            mask = [item[legend_var] == l_val for item in results.cv_results_['params']]
-            scores = scores[mask]
-            x_values = x_values[mask]
-        if log:
-            axes = plt.subplot()
-            axes.set_xscale('log')
-        plt.plot(x_values, scores, label=f'{legend_var} = {l_val}' if legend_var else '')
-    plt.xlabel(x_var)
-    plt.ylabel(results.scoring)
-    if legend_var is not None:
-        plt.legend()
+        return {
+            key: svd_n_range_scores_for_pipe(**params) for key, params in params_dict.items()
+        }

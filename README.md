@@ -15,11 +15,11 @@ It's added to the project as `train.csv` file
 2. `PolynomialFeatures`. Since some words may influence the meaning of text only in combination with other words, the linear classifiers may loose some info. Creating polynomial features allows to find connections between word combinations and target
 3. `SelectKBest`. After applying the previous two techniques we may end up with enormouse numbers of features, e.g. tens of thousands. This technique allows to select the most related to the target
 4. `TruncatedSVD`. The final dimensionality reduction technique to reduce the number if features to hundreds
-
 #### What and how was measured
 
-1. 5 different models were tested:
-   2. Ridge Classifier
+1. 6 different models were tested:
+   2. Naive Bayes
+   3. Ridge Classifier
    3. Logistic Regression
    4. Decision Tree
    5. Random Forest
@@ -32,6 +32,8 @@ It's added to the project as `train.csv` file
   - ```pip3 install -r requirements.txt```
 - run notebook: 
   - `jupyter-lab`
+- run tests locally:
+  - `pytest`
 - train and save model: 
   - `python train.py`
 - run service locally:

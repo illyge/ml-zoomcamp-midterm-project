@@ -1,4 +1,10 @@
-from preprocess_util import *
+from preprocess_util import k_range_scores, \
+    k_range_scores_for_pipe, \
+    svd_n_range_scores, \
+    svd_n_range_scores_for_pipe, \
+    mislabeled_dups, \
+    drop_mislabeled_dups
+
 import unittest
 from unittest.mock import Mock, patch
 import pandas as pd
@@ -127,3 +133,19 @@ class TestFunctions(unittest.TestCase):
         call = mock_grid_search.fit.call_args_list[0]
         assert all(x[1]['cv'] == mock_cv and x[1]['scoring'] == 'f1' for x in mock_grid_search.call_args_list)
         assert all(x[0] == (mock_X, mock_y) for x in mock_grid_search.fit.call_args_list)
+
+    def test_mislabeled_dups(self):
+        df = pd.DataFrame({'text': ['text1', 'text2', 'text1', 'text2'], 'target': [1, 0, 0, 0]})
+        result = mislabeled_dups(df)
+        print(result)
+        expected_result = pd.DataFrame({'text': ['text1', 'text1'], 'target': [1, 0]},
+                                       index=pd.RangeIndex(start=0, stop=3, step=2))
+        pd.testing.assert_frame_equal(result, expected_result)
+
+    def test_drop_mislabeled_dups(self):
+        df = pd.DataFrame({'text': ['text1', 'text2', 'text1', 'text2'], 'target': [1, 0, 0, 0]})
+        result = drop_mislabeled_dups(df)
+        print(result)
+        expected_result = pd.DataFrame({'text': ['text2', 'text2'], 'target': [0, 0]},
+                                       index=pd.RangeIndex(start=1, stop=4, step=2))
+        pd.testing.assert_frame_equal(result, expected_result)

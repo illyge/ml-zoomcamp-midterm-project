@@ -187,3 +187,35 @@ def svd_n_range_scores(params_dict):
         return {
             key: svd_n_range_scores_for_pipe(**params) for key, params in params_dict.items()
         }
+
+
+def mislabeled_dups(df):
+    """
+    Find mislabeled duplicates in a dataframe.
+
+    Mislabeled duplicates are records in the dataframe that have the same 'text' values, but different 'target' values.
+
+    Parameters:
+    - df (pandas.DataFrame): The dataframe to search for mislabeled duplicates.
+
+    Returns:
+    - pandas.DataFrame: A dataframe containing the mislabeled duplicates.
+    """
+    all_dups = df[df.duplicated(subset=['text'], keep=False)].text
+    mislabeled_dups = df[all_dups.apply(lambda x: df[df.text == x].target.nunique() == 2)]
+    return mislabeled_dups
+
+
+def drop_mislabeled_dups(df):
+    """
+    Drop mislabeled duplicates from a dataframe.
+
+    Mislabeled duplicates are records in the dataframe that have the same 'text' values, but different 'target' values.
+
+    Parameters:
+    - df (pandas.DataFrame): The dataframe to search for and drop mislabeled duplicates.
+
+    Returns:
+    - pandas.DataFrame: A dataframe with the mislabeled duplicates removed.
+    """
+    return df.drop(mislabeled_dups(df).index)

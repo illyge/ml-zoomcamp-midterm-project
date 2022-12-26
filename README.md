@@ -50,6 +50,8 @@ The research was done according to the following plan:
       5. Result: no significant improvement of the score.
 6. Final Hyperparameter tuning.
 
+## Some results and conclusions
+
 As a result the following scores were obtained for each step:
 
 | Features                 |   Naive Bayes |   Ridge Classifier |   Logistic Regression |     Tree |   Forest |   XGBoost |
@@ -61,7 +63,10 @@ As a result the following scores were obtained for each step:
 | Fine tuning (x_val)      |      0.748595 |           0.746313 |              0.751787 | 0.72656  | 0.753157 |  0.746981 |
 | Fine tuning (test)       |      0.773688 |           0.756972 |              0.773481 | 0.733781 | 0.772727 |  0.767213 |
 
-The winner model - ComplementNB (Naive Bayes) - was selected to be trained and served
+- The Naive Bayes seems to work the best among the models on data like tweets
+- The fact that all models, despite being tuned in different ways, converge to a similar mean score (~76-77%) in the end, might indicate that this value is close to the limit of the sentiment information this data contains 
+  - This probably can be improved by bringing more information for example with pretrained embeddings
+- The winner model - ComplementNB (Naive Bayes) - was selected to be trained and served
 
 ## How to run the project
 
@@ -76,11 +81,6 @@ The winner model - ComplementNB (Naive Bayes) - was selected to be trained and s
 - run service locally:
   - `bentoml serve service.py:svc`
   - open http://localhost:3000 to access web UI for the API
-
-## Some results and conclusions
-
-- The best performance was shown by Naive Bayes and Random Forest Classifier. The F1 score on the test data was ~0.72
-- New engineered features (e.g. url or hashtag count, text length, etc) while showing good correlation with the target, didn't add much to the performance of the model. Probably the reason is that this information was immanently added with frequency and polynomialization
 
 ## Examples of usage:
 

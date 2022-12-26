@@ -1,7 +1,8 @@
 import bentoml
-from pydantic import BaseModel
-from bentoml.io import JSON
 import pandas as pd
+from bentoml.io import JSON
+from pydantic import BaseModel
+
 
 class TwitterDisasterApp(BaseModel):
     location: str

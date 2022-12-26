@@ -1,15 +1,16 @@
+import unittest
+from unittest.mock import Mock, patch
+
+import pandas as pd
+
 from preprocess_util import k_range_scores_for_pipe, \
     svd_n_range_scores_for_pipe, \
     mislabeled_dups, \
     drop_mislabeled_dups
 
-import unittest
-from unittest.mock import Mock, patch
-import pandas as pd
-
 
 class TestFunctions(unittest.TestCase):
-    
+
     @patch('preprocess_util.GridSearchCV', autospec=True)
     @patch('preprocess_util.PolynomialFeatures', autospec=True)
     def test_k_range_scores_for_pipe(self, mock_polynomial_features, mock_grid_search):
@@ -31,7 +32,7 @@ class TestFunctions(unittest.TestCase):
 
         # Set up the mock grid search object to return itself when the fit method is called
         mock_grid_search.return_value = mock_grid_search
-        
+
         mock_grid_search_fit = Mock()
         mock_grid_search.fit.return_value = mock_grid_search_fit
         # Create mock objects for the X and y inputs
@@ -50,7 +51,6 @@ class TestFunctions(unittest.TestCase):
 
         # Assert that the mock grid search object was called twice
         self.assertEqual(mock_grid_search.call_count, 2)
-
 
         # Assert that the first call to the mock grid search object used the correct parameters
 
@@ -78,7 +78,6 @@ class TestFunctions(unittest.TestCase):
         # Assert that both calls to the fit method used the correct parameters
         self.assertEqual(mock_grid_search.fit.call_args_list[0], ((mock_X, mock_y),))
         self.assertEqual(mock_grid_search.fit.call_args_list[1], ((mock_X, mock_y),))
-
 
     @patch('preprocess_util.GridSearchCV', autospec=True)
     @patch('preprocess_util.PolynomialFeatures', autospec=True)

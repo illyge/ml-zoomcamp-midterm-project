@@ -1,9 +1,9 @@
 import bentoml
 import pandas as pd
 from sklearn.naive_bayes import ComplementNB
-from pipeline_util import make_preparation_pipeline
+from util.pipeline_util import make_preparation_pipeline
 from sklearn.pipeline import Pipeline
-from preprocess_util import drop_mislabeled_dups
+from util.preprocess_util import drop_mislabeled_dups
 
 def pipeline():
     pipeline = make_preparation_pipeline(kw=True)

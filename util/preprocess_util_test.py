@@ -136,9 +136,8 @@ class TestFunctions(unittest.TestCase):
         df = pd.DataFrame({'text': ['text1', 'text2', 'text1', 'text2'], 'target': [1, 0, 0, 0]})
         result = mislabeled_dups(df)
         print(result)
-        expected_result = pd.DataFrame({'text': ['text1', 'text1'], 'target': [1, 0]},
-                                       index=pd.RangeIndex(start=0, stop=3, step=2))
-        pd.testing.assert_frame_equal(result, expected_result)
+        expected_result = pd.Series(['text1', 'text1'], [0, 2], name='text')
+        pd.testing.assert_series_equal(result, expected_result)
 
     def test_drop_mislabeled_dups(self):
         df = pd.DataFrame({'text': ['text1', 'text2', 'text1', 'text2'], 'target': [1, 0, 0, 0]})

@@ -202,7 +202,7 @@ def mislabeled_dups(df):
     - pandas.DataFrame: A dataframe containing the mislabeled duplicates.
     """
     all_dups = df[df.duplicated(subset=['text'], keep=False)].text
-    mislabeled_dups = df[all_dups.apply(lambda x: df[df.text == x].target.nunique() == 2)]
+    mislabeled_dups = all_dups[all_dups.apply(lambda x: df[df.text == x].target.nunique() == 2)]
     return mislabeled_dups
 
 

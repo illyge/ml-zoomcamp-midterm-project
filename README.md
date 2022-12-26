@@ -82,7 +82,5 @@ As a result the following scores were obtained for each step:
   - `bentoml serve service.py:svc`
   - open http://localhost:3000 to access web UI for the API
 
-## Examples of usage:
-
-![img.png](img.png)
-![img_1.png](img_1.png)
+## Deployed version:
+http://44.192.25.195:3000

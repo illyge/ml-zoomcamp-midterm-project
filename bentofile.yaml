@@ -3,8 +3,11 @@ labels:
   project: "twitter-disasters-service"
 include:
   - "service.py"
+  - "util/pipeline_util.py"
+  - "util/preprocess_util.py"
 python:
   packages:
+    - pandas
     - scikit-learn
     - pydantic
     - scipy

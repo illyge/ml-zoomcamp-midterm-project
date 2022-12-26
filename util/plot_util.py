@@ -1,8 +1,8 @@
+import matplotlib.pyplot as plt
+import matplotlib.ticker as mticker
 import numpy as np
 from matplotlib.pyplot import cm
-import matplotlib.pyplot as plt 
-from matplotlib.pyplot import figure
-import matplotlib.ticker as mticker
+
 
 def plot_score_diffs(diffs):
     """
@@ -15,8 +15,8 @@ def plot_score_diffs(diffs):
     
     Returns:
     - None
-    """    
-    fig, ax = plt.subplots(6, 1, figsize=(10,35))
+    """
+    fig, ax = plt.subplots(6, 1, figsize=(10, 35))
 
     diffs_reversed = diffs.iloc[::-1]
     steps_range = np.arange(diffs_reversed.shape[0])
@@ -25,7 +25,7 @@ def plot_score_diffs(diffs):
         diffs_sorted = diffs.sort_values(by=[col])
         steps_range = np.arange(diffs_sorted.shape[0])
 
-        axes = plt.subplot(6, 1, i+1)
+        axes = plt.subplot(6, 1, i + 1)
         plt.title(col)
 
         scores = diffs_sorted[col].to_list()
@@ -47,6 +47,7 @@ def plot_score_diffs(diffs):
 
     plt.legend()
 
+
 def plot_k_range_results(all_results):
     """
     Plot the results of grid search for different values of k in SelectKBest.
@@ -59,7 +60,7 @@ def plot_k_range_results(all_results):
     Returns:
     - None
     """
-    
+
     fig, ax = plt.subplots(len(all_results), 1, figsize=(10, 35))
 
     i = 1
@@ -111,7 +112,7 @@ def plot_svd__range_results(all_results):
     
     Returns:
     - None
-    """    
+    """
     fig, ax = plt.subplots(len(all_results), 1, figsize=(10, 35))
 
     i = 1
@@ -159,7 +160,7 @@ def plot_grid_results(results, x_var, legend_var=None, log=False):
     
     Returns:
     - None
-    """    
+    """
     if legend_var is None:
         legend_values = ['dummy']
     else:

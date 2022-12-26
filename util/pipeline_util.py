@@ -1,11 +1,11 @@
-from sklearn.feature_extraction.text import CountVectorizer
-from sklearn.feature_extraction import DictVectorizer
-from sklearn.preprocessing import PolynomialFeatures
+from sklearn.compose import ColumnTransformer
 from sklearn.decomposition import TruncatedSVD
+from sklearn.feature_extraction import DictVectorizer
+from sklearn.feature_extraction.text import CountVectorizer
+from sklearn.feature_selection import SelectKBest, chi2
 from sklearn.pipeline import Pipeline
 from sklearn.preprocessing import FunctionTransformer
-from sklearn.compose import ColumnTransformer
-from sklearn.feature_selection import SelectKBest, chi2
+from sklearn.preprocessing import PolynomialFeatures
 
 
 def series_to_dict(series):
@@ -17,7 +17,7 @@ def series_to_dict(series):
     
     Returns:
     - list: A list of dictionaries where each dictionary has a key with the name of the Series object.
-    """    
+    """
     return [{series.name: item[1]} for item in series.items()]
 
 
@@ -29,7 +29,8 @@ def make_kw_pipeline():
     - sklearn Pipeline: A pipeline that takes in a pandas Series object and outputs a scipy sparse matrix.
     """
     return Pipeline(steps=[('kw_to_dict', FunctionTransformer(series_to_dict)),
-                              ('d_vect', DictVectorizer())])
+                           ('d_vect', DictVectorizer())])
+
 
 def make_loc_pipeline():
     """
@@ -37,9 +38,10 @@ def make_loc_pipeline():
     
     Returns:
     - sklearn Pipeline: A pipeline that takes in a pandas Series object and outputs a scipy sparse matrix.
-    """    
+    """
     return Pipeline(steps=[('loc_to_dict', FunctionTransformer(series_to_dict)),
-                              ('d_vect', DictVectorizer())])
+                           ('d_vect', DictVectorizer())])
+
 
 def make_poly2_k_best_pipeline():
     """
@@ -47,9 +49,10 @@ def make_poly2_k_best_pipeline():
     
     Returns:
     - sklearn Pipeline: A pipeline that takes in a scipy sparse matrix and outputs a transformed scipy sparse matrix.
-    """    
+    """
     return Pipeline(steps=[('poly2', PolynomialFeatures(2)),
-                                        ('k_best', SelectKBest(chi2))])
+                           ('k_best', SelectKBest(chi2))])
+
 
 def make_vectorizer(
         min_df=10,
@@ -75,8 +78,9 @@ def make_vectorizer(
     
     Returns:
     - sklearn ColumnTransformer: A ColumnTransformer object that applies the specified vectorizers to the specified columns of a pandas DataFrame.
-    """    
-    columns = [('text_c_vect', CountVectorizer(min_df=min_df, stop_words=stopwords, preprocessor=preprocessor, ngram_range=ngram_range), 'text')]
+    """
+    columns = [('text_c_vect', CountVectorizer(min_df=min_df, stop_words=stopwords, preprocessor=preprocessor,
+                                               ngram_range=ngram_range), 'text')]
     if kw:
         columns.append(('kw_dict_vect', make_kw_pipeline(), 'keyword'))
     if loc:
@@ -99,7 +103,7 @@ def make_preparation_pipeline(
         stopwords=None,
         preprocessor=None,
         ngram_range=(1, 1),
-    ):
+):
     """
     Constructs a preparation pipeline for text data.
 
@@ -134,7 +138,7 @@ def make_preparation_pipeline(
     Returns
     - A scikit-learn pipeline object that processes the input data and returns a transformed version of it, ready for modeling.
     """
-    vectorizer=make_vectorizer(
+    vectorizer = make_vectorizer(
         min_df=min_df,
         kw=kw,
         loc=loc,
@@ -149,9 +153,10 @@ def make_preparation_pipeline(
 
     return Pipeline(steps=steps)
 
+
 def make_transformation_pipeline(
-    classifier,
-    params
+        classifier,
+        params
 ):
     """
     Constructs a pipeline with the given classifier at the end and a variety of optional preprocessing steps, specified in params, before it.
@@ -174,7 +179,7 @@ def make_transformation_pipeline(
     Returns:
     - A scikit-learn Pipeline object with the specified preprocessing steps and the given classifier at the end.
     """
-    
+
     pipeline = make_preparation_pipeline(**params)
     steps = pipeline.steps.copy()
     steps.append(('poly2_k_best', make_poly2_k_best_pipeline()))

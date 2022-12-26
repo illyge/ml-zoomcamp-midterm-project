@@ -1,20 +1,8 @@
-import pandas as pd
-import numpy as np
-from operator import itemgetter
-from sklearn.feature_extraction.text import CountVectorizer
-from sklearn.feature_extraction import DictVectorizer
-from sklearn.preprocessing import PolynomialFeatures
-import scipy.sparse as sp
-from sklearn.decomposition import TruncatedSVD
-from sklearn.metrics import f1_score
-import logging
 import warnings
 
 from sklearn.model_selection import GridSearchCV
+from sklearn.preprocessing import PolynomialFeatures
 
-from datetime import datetime
-
-from sklearn.feature_selection import SelectKBest, chi2
 default_preprocess_settings = {
     'url_cleaner': None,
     'preprocessor': None,
@@ -27,6 +15,7 @@ default_preprocess_settings = {
     'hashtags': False,
     'svd_n_comp': None
 }
+
 
 def k_range_scores_for_pipe(pipe, k_range, cv=None, X=None, y=None):
     """
@@ -48,30 +37,31 @@ def k_range_scores_for_pipe(pipe, k_range, cv=None, X=None, y=None):
         'poly2_k_best': ['passthrough'],
         'svd': ['passthrough']
     }
-    
+
     param_grid_k_range = {
         'poly2_k_best__poly2': ['passthrough', PolynomialFeatures(2)],
         'poly2_k_best__k_best__k': k_range,
         'svd': ['passthrough']
     }
-    
-    range_k_grid_search = GridSearchCV(pipe, 
-                                   param_grid = param_grid_k_range,
-                                   scoring='f1',
-                                   cv=cv)
-    default_grid_search = GridSearchCV(pipe, 
-                                   param_grid = param_grid_default,
-                                   scoring='f1',
-                                   cv=cv)
+
+    range_k_grid_search = GridSearchCV(pipe,
+                                       param_grid=param_grid_k_range,
+                                       scoring='f1',
+                                       cv=cv)
+    default_grid_search = GridSearchCV(pipe,
+                                       param_grid=param_grid_default,
+                                       scoring='f1',
+                                       cv=cv)
     with warnings.catch_warnings():
         warnings.simplefilter("ignore")
         range_results = range_k_grid_search.fit(X, y)
         default_results = default_grid_search.fit(X, y)
-        
+
     return {
         'range': range_results,
         'default': default_results
     }
+
 
 def k_range_scores(ranged_pipelines, cv=None, X=None, y=None):
     """
@@ -89,10 +79,11 @@ def k_range_scores(ranged_pipelines, cv=None, X=None, y=None):
     - dict: A dictionary where the keys are the names of the pipelines and the values are dictionaries with two keys: 
             'range' and 'default'. The 'range' key refers to a GridSearchCV object with k values from the provided 
             range. The 'default' key refers to a GridSearchCV object  without either polynomialization or k best selection
-    """    
+    """
     return {
         key: k_range_scores_for_pipe(rp[0], rp[1], cv=cv, X=X, y=y) for key, rp in ranged_pipelines.items()
     }
+
 
 def svd_n_range_scores_for_pipe(pipe, n_range, no_poly_k=1000, poly_2_k=1000, defaults={}, cv=None, X=None, y=None):
     """
@@ -119,7 +110,7 @@ def svd_n_range_scores_for_pipe(pipe, n_range, no_poly_k=1000, poly_2_k=1000, de
     variable_defaults = {
         'No Poly, No BestK': {
             'poly2_k_best': ['passthrough']
-         },
+        },
         f'No Poly, Best {no_poly_k}': {
             'poly2_k_best__poly2': ['passthrough'],
             'poly2_k_best__k_best__k': [no_poly_k]
@@ -127,18 +118,18 @@ def svd_n_range_scores_for_pipe(pipe, n_range, no_poly_k=1000, poly_2_k=1000, de
         f'Poly 2, Best {poly_2_k}': {
             'poly2_k_best__poly2': [PolynomialFeatures(2)],
             'poly2_k_best__k_best__k': [poly_2_k]
-        },    
+        },
         f'Poly 2, Best 10000': {
             'poly2_k_best__poly2': [PolynomialFeatures(2)],
             'poly2_k_best__k_best__k': [10000]
-        }         
+        }
     }
-    
+
     results = {}
     for label, param_grid in variable_defaults.items():
         param_grid_ranged = defaults.copy()
         param_grid_ranged.update(param_grid)
-        param_grid_no_svd = param_grid_ranged.copy() 
+        param_grid_no_svd = param_grid_ranged.copy()
         param_grid_ranged.update({
             'svd__n_components': n_range
         })
@@ -146,15 +137,15 @@ def svd_n_range_scores_for_pipe(pipe, n_range, no_poly_k=1000, poly_2_k=1000, de
             'svd': ['passthrough']
         })
 
-        grid_search = GridSearchCV(pipe, 
-                                   param_grid = param_grid_ranged,
+        grid_search = GridSearchCV(pipe,
+                                   param_grid=param_grid_ranged,
                                    scoring='f1',
                                    cv=cv)
-        
-        grid_search_no_svd = GridSearchCV(pipe, 
-                                       param_grid = param_grid_no_svd,
-                                       scoring='f1',
-                                       cv=cv)
+
+        grid_search_no_svd = GridSearchCV(pipe,
+                                          param_grid=param_grid_no_svd,
+                                          scoring='f1',
+                                          cv=cv)
         with warnings.catch_warnings():
             warnings.simplefilter("ignore")
             range_results = grid_search.fit(X, y)
@@ -163,9 +154,9 @@ def svd_n_range_scores_for_pipe(pipe, n_range, no_poly_k=1000, poly_2_k=1000, de
             'range': range_results,
             'no_svd': no_svd_results
         }
-        
-        
+
     return results
+
 
 def svd_n_range_scores(params_dict):
     """
@@ -181,7 +172,7 @@ def svd_n_range_scores(params_dict):
             keys: 'range' and 'no_svd'. The 'range' key refers to a GridSearchCV object with n values from the 
             provided range for the SVD step. The 'no_svd' key refers to a GridSearchCV object with the SVD step set 
             to 'passthrough'.
-    """    
+    """
     result = {}
     for key, params in params_dict.items():
         return {

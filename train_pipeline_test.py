@@ -1,9 +1,11 @@
 import unittest
 from unittest.mock import patch, Mock
 
-from train_pipeline import pipeline, prepare_data, train
-from sklearn.pipeline import Pipeline
 from sklearn.naive_bayes import ComplementNB
+from sklearn.pipeline import Pipeline
+
+from train_pipeline import pipeline, prepare_data, train
+
 
 class TestTrainPipeline(unittest.TestCase):
     @patch('train_pipeline.make_preparation_pipeline')
@@ -48,10 +50,13 @@ class TestTrainPipeline(unittest.TestCase):
         self.assertEqual(mock_pd.read_csv.call_count, 1, msg='Should read the data from csv once')
 
         self.assertEqual(mock_prepare_data.call_count, 1, msg='Should prepare the data once')
-        self.assertEqual(mock_prepare_data.call_args[0][0], mock_data, msg='Should prepare the data based on the csv read')
+        self.assertEqual(mock_prepare_data.call_args[0][0], mock_data,
+                         msg='Should prepare the data based on the csv read')
 
         self.assertEqual(mock_classifier.fit.call_count, 1, msg='Should fit the model once')
-        self.assertEqual(mock_classifier.fit.call_args[0], (mock_prepared, mock_prepared.target), msg='Should fit the model with the correct data')
+        self.assertEqual(mock_classifier.fit.call_args[0], (mock_prepared, mock_prepared.target),
+                         msg='Should fit the model with the correct data')
 
         self.assertEqual(mock_bentoml.sklearn.save_model.call_count, 1, msg='Should save model once')
-        self.assertEqual(mock_bentoml.sklearn.save_model.call_args[0][1], mock_classifier, msg='Should save the trained classifier')
+        self.assertEqual(mock_bentoml.sklearn.save_model.call_args[0][1], mock_classifier,
+                         msg='Should save the trained classifier')

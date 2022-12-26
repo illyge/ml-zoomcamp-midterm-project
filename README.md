@@ -77,7 +77,7 @@ As a result the following scores were obtained for each step:
 - run tests locally:
   - `pytest`
 - train and save model: 
-  - `python train.py`
+  - `python train_pipeline.py`
 - run service locally:
   - `bentoml serve service.py:svc`
   - open http://localhost:3000 to access web UI for the API

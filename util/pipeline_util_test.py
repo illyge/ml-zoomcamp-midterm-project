@@ -1,18 +1,25 @@
-from unittest.mock import patch
-import pandas as pd
-from pipeline_util import *
-
-
 import unittest.mock
+from unittest.mock import patch
+
+import pandas as pd
+from sklearn.compose import ColumnTransformer
+from sklearn.decomposition import TruncatedSVD
+from sklearn.feature_extraction.text import CountVectorizer
+from sklearn.pipeline import Pipeline
+from sklearn.preprocessing import FunctionTransformer
+
+from pipeline_util import series_to_dict, make_kw_pipeline, make_preparation_pipeline, make_vectorizer, \
+    make_transformation_pipeline, make_poly2_k_best_pipeline, make_loc_pipeline
+
 
 class TestFunctions(unittest.TestCase):
-    
+
     def test_series_to_dict_single_word_elements(self):
         # Test Series with single word elements
         s = pd.Series(['apple', 'banana', 'cherry'], name='column_name')
         result = series_to_dict(s)
         self.assertEqual(result, [{'column_name': 'apple'}, {'column_name': 'banana'}, {'column_name': 'cherry'}])
-        
+
     def test_make_kw_pipeline(self):
         # Test that make_kw_pipeline creates a Pipeline with the proper transformers
         kw_pipeline = make_kw_pipeline()
@@ -35,7 +42,7 @@ class TestFunctions(unittest.TestCase):
         self.assertIsInstance(loc_pipeline, Pipeline)
         self.assertIsInstance(loc_pipeline.steps[0][1], FunctionTransformer)
         self.assertEqual(loc_pipeline.steps[0][1].func, series_to_dict)
-        
+
     def test_make_poly2_k_best_pipeline(self):
         # Test that the returned object is a Pipeline
         pipeline = make_poly2_k_best_pipeline()
@@ -44,7 +51,6 @@ class TestFunctions(unittest.TestCase):
         # Test that the Pipeline has the correct steps
         self.assertEqual(pipeline.steps[0][0], 'poly2')
         self.assertEqual(pipeline.steps[1][0], 'k_best')
-
 
     @patch('pipeline_util.make_kw_pipeline')
     def test_make_vectorizer_with_kw(self, mock_make_kw_pipeline):

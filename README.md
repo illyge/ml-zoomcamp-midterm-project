@@ -28,7 +28,7 @@ It's added to the project as `train.csv` file
 
 ## Research
 
-* For the details please refer to the twitter_disasters.ipynb notebook
+* For the details please refer to the [twitter_disasters.ipynb](twitter_disasters.ipynb) notebook
 
 The research was done according to the following plan:
 1. Data analysis and cleanup

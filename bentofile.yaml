@@ -8,6 +8,6 @@ include:
 python:
   packages:
     - pandas
-    - scikit-learn
+    - scikit-learn==1.1.3
     - pydantic
     - scipy

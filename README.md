@@ -13,20 +13,28 @@ It's added to the project as `train.csv` file
 ## Main techniques used in the project
 
 #### The problem belongs to the NLP domain, so the data we analyze here is purely textual. Here are some techniques that are used in the project:
-1. `CountVectorizer`. This feature extraction works similarly to the `DictVectorizer`, but instead of vectorizing a category column it is applied to a column of texts. Each text is tokenized into separate words and for each word a feature is created with frequency of this word in a respective text
-2. `PolynomialFeatures`. Since some words may influence the meaning of text only in combination with other words, the linear classifiers may loose some info. Creating polynomial features allows to find connections between word combinations and target
-3. `SelectKBest`. After applying the previous two techniques we may end up with enormous numbers of features, e.g. tens of thousands. This technique allows to select the most related to the target
-4. `TruncatedSVD`. The final dimensionality reduction technique to reduce the number of features to hundreds
+1. `DictVectorizer`. Vectorizing categorical columns, such as `keyword` or `location`
+2. `CountVectorizer`. This feature extraction works similarly to the `DictVectorizer`, but instead of vectorizing a category column it is applied to a column of texts. Each text is tokenized into separate words and for each word a feature is created with frequency of this word in a respective text
+   * `Stemming`, `Lemmatization`. Methods to reduce words to their base form during tokenization
+3. `PolynomialFeatures`. Since some words may influence the meaning of text only in combination with other words, the linear classifiers may loose some info. Creating polynomial features allows to find connections between word combinations and target
+4. `SelectKBest`. After applying the previous two techniques we may end up with enormous numbers of features, e.g. tens of thousands. This technique allows to select the most related to the target
+5. `TruncatedSVD`. The final dimensionality reduction technique to reduce the number of features to hundreds
+
 #### What and how was measured
 
 * 6 different models were tested:
-   1. Naive Bayes
-   1. Ridge Classifier
-   1. Logistic Regression
-   1. Decision Tree
-   1. Random Forest
-   1. XGBoost
+   1. `Naive Bayes`
+   1. `Ridge Classifier`
+   1. `Logistic Regression`
+   1. `Decision Tree`
+   1. `Random Forest`
+   1. `XGBoost`
 * `F1 score`. This metric was used to evaluate the performance of the models
+
+#### Deploying API
+
+1. `BentoML`. Framework to build, package and deploy the model
+2. `AWS ECS`. To run a task serving the image build by BentoML
 
 ## Research
 

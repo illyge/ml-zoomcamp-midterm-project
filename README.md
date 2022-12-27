@@ -83,4 +83,4 @@ As a result the following scores were obtained for each step:
   - open http://localhost:3000 to access web UI for the API
 
 ## Deployed version:
-http://44.192.25.195:3000
+http://3.88.161.239:3000

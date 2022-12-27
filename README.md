@@ -33,7 +33,7 @@ It's added to the project as `train.csv` file
 
 #### Deploying API
 
-1. `BentoML`. Framework to build, package and deploy the model
+1. `BentoML`. Framework to build, package and deploy the model as a service implementing REST API
 2. `AWS ECS`. To run a task serving the image build by BentoML
 
 ## Research

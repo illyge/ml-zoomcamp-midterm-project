@@ -109,5 +109,6 @@ As a result the following scores were obtained for each step:
   - open http://localhost:3000 to access web UI for the API
 
 ## Deployed API
-* The classifier API is available at this public endpoint:
-http://3.88.161.239:3000
+* The classifier API is available at this public resource:
+http://twitter-disasters.illyge.com
+* Currently it works only for english language

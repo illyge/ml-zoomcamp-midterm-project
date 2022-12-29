@@ -1,5 +1,8 @@
 # Twitter Disaster Detection
 
+This is my midterm project for the machine learning bootcamp:
+https://github.com/alexeygrigorev/mlbookcamp-code/tree/master/course-zoomcamp
+
 ## Problem statement
 The objective of this project is to develop a production-ready API that incorporates a tweet classifier to determine whether a tweet relates to a disaster or not. 
 

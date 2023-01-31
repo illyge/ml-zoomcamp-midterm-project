@@ -4,7 +4,7 @@ This is my midterm project for the machine learning bootcamp:
 https://github.com/alexeygrigorev/mlbookcamp-code/tree/master/course-zoomcamp
 
 ## Problem statement
-The objective of this project is to develop a production-ready API that incorporates a tweet classifier to determine whether a tweet relates to a disaster or not. 
+
 
 The selection and fine-tuning of the model should be based on a comprehensive analysis of various models and data processing methods.
 
@@ -113,5 +113,5 @@ As a result the following scores were obtained for each step:
 
 ## Deployed API
 * The classifier API is available at this public resource:
-http://twitter-disasters.illyge.com
+http://api.twitter-disasters.illyge.com
 * Currently it works only for english language

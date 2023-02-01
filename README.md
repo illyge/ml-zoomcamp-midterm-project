@@ -113,5 +113,5 @@ As a result the following scores were obtained for each step:
 
 ## Deployed API
 * The classifier API is available at this public resource:
-http://api.twitter-disasters.illyge.com
+https://api.twitter-disasters.illyge.com
 * Currently it works only for english language
